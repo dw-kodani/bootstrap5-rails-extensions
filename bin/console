@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "bootstrap5_rails_extensions"
+
+puts "Bootstrap5RailsExtensions console loaded!"
+puts "Try: Rails.application&.config&.eager_load_namespaces"
+puts
+
+require "irb"
+IRB.start(__FILE__)
