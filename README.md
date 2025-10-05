@@ -28,17 +28,14 @@ Stimulusアプリケーションへの登録例です。
 ```javascript
 // app/javascript/controllers/index.js
 import { application } from "./application"
+import { registerBootstrap5Controllers } from "bootstrap5_rails_extensions"
 
-import ModalController from "bootstrap5_rails_extensions/modal_controller"
-import OffcanvasController from "bootstrap5_rails_extensions/offcanvas_controller"
-import ToastController from "bootstrap5_rails_extensions/toast_controller"
-
-application.register("modal", ModalController)
-application.register("offcanvas", OffcanvasController)
-application.register("toast", ToastController)
+registerBootstrap5Controllers(application)
 ```
 
-ESBuildやViteなどを利用している場合も、同様にコントローラをインポートして登録してください。
+オプションで`registerBootstrap5Controllers`の第2引数に`{ modal: CustomModalController }`のようなハッシュを渡すと、任意のコントローラーで上書きを行えます。ESBuildやViteなどのバンドラをご利用の場合も同様に読み込んでください。
+
+個別に登録したい場合は、従来どおり各コントローラーをインポートした上で`application.register`を呼び出してください。
 
 ### トースト用コンテナの設置
 
