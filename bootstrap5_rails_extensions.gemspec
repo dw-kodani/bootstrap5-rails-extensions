@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Bootstrap 5 extensions for Rails (Stimulus/Turbo friendly)"
   spec.description = "Rails Engine offering Bootstrap 5 extensions. Includes a render_modal helper and a shared modal partial, designed to work smoothly with Stimulus and Turbo."
-  spec.homepage = "https://dreaw.jp"
+  spec.homepage = "https://github.com/dw-kodani/bootstrap5-rails-extensions"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1.0"
 
