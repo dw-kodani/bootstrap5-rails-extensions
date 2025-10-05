@@ -1,0 +1,6 @@
+<%# Engine shared partial - expects locals: id:, dialog_class:, data:, content: %>
+<div class="modal fade" id="<%= id %>" tabindex="-1" aria-labelledby="<%= id %>Label" aria-hidden="true" data-controller="<%= data[:controller] %>"<% (data || {}).except(:controller).each do |k, v| %> data-<%= k.to_s.dasherize %>="<%= v %>"<% end %>>
+  <div class="<%= dialog_class %>">
+    <%= content %>
+  </div>
+</div>
