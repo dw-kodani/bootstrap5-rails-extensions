@@ -1,22 +1,60 @@
 # Bootstrap5 Rails Extensions（Rails Engine）
 
-Railsアプリ向けに、Bootstrap 5のUIをRailsと相性よく使うための拡張を提供するエンジンです。Stimulus/Turboにフレンドリーな`render_modal`ヘルパー（共有パーシャル）などを含みます。
+RailsアプリケーションでBootstrap 5をTurbo/Stimulusと併用しやすくするための拡張を提供します。モーダルやオフキャンバス、カード、テーブル、トースト向けのDSLヘルパーと、対応するStimulusコントローラを同梱しています。
 
-## インストール（path gem）
+## インストール
 
 Gemfile（ホストアプリ）:
 
 ```ruby
-gem "bootstrap5-rails-extensions", path: "vendor/engines/bootstrap5_rails_extensions"
+gem "bootstrap5-rails-extensions"
 ```
 
-その後 `bundle install` を実行します。
+`bundle install` を実行してください。
 
-## 使い方（Modal）
+## セットアップ
 
-まず、アプリ側でBootstrapのJSを読み込み、`modal`というStimulusコントローラ（本エンジン同梱）を有効化してください。
+### Stimulusコントローラの登録
 
-モーダルの器を置く:
+Importmapをご利用の場合は、エンジンが提供するコントローラ群をpinしてください。
+
+```ruby
+# config/importmap.rb
+pin_all_from "bootstrap5_rails_extensions", under: "bootstrap5_rails_extensions"
+```
+
+Stimulusアプリケーションへの登録例です。
+
+```javascript
+// app/javascript/controllers/index.js
+import { application } from "./application"
+
+import ModalController from "bootstrap5_rails_extensions/modal_controller"
+import OffcanvasController from "bootstrap5_rails_extensions/offcanvas_controller"
+import ToastController from "bootstrap5_rails_extensions/toast_controller"
+
+application.register("modal", ModalController)
+application.register("offcanvas", OffcanvasController)
+application.register("toast", ToastController)
+```
+
+ESBuildやViteなどを利用している場合も、同様にコントローラをインポートして登録してください。
+
+### トースト用コンテナの設置
+
+レイアウトなど、常に描画されるテンプレートに以下を追加しておくと、Turbo Stream経由でトーストを流し込めます。
+
+```erb
+<%= render_toast %>
+```
+
+フラッシュメッセージを初期表示したい場合は `render_toast(flash_messages: flash)` のように渡してください。
+
+## ビューヘルパー
+
+### render_modal
+
+Stripeダッシュボード風のモーダルDSLです。`render_modal` にIDとタイトルを渡し、ブロックで本文・フッターを組み立てます。
 
 ```erb
 <%= render_modal id: "settingsModal", title: "設定", dialog: { size: :lg, centered: true } do |modal| %>
@@ -28,11 +66,10 @@ gem "bootstrap5-rails-extensions", path: "vendor/engines/bootstrap5_rails_extens
 <% end %>
 ```
 
-フォームを含めたい場合:
+フォームを扱う場合は `form:` に `form_with` のオプションをそのまま渡してください。`modal.body` / `modal.footer` のブロックにはフォームビルダーが渡されます。
 
 ```erb
-<%= render_modal id: "userModal", title: "ユーザー追加",
-    form: { model: User.new, url: users_path } do |modal| %>
+<%= render_modal id: "userModal", title: "ユーザー追加", form: { model: User.new, url: users_path } do |modal| %>
   <% modal.body do |f| %>
     <%= f.text_field :name, class: "form-control" %>
   <% end %>
@@ -42,7 +79,7 @@ gem "bootstrap5-rails-extensions", path: "vendor/engines/bootstrap5_rails_extens
 <% end %>
 ```
 
-トリガー（クリックで開いてTurbo Frameに読み込む）:
+モーダルを開くトリガー要素には、Stimulusコントローラが参照する属性を付与します。
 
 ```erb
 <%= link_to settings_path,
@@ -52,22 +89,15 @@ gem "bootstrap5-rails-extensions", path: "vendor/engines/bootstrap5_rails_extens
 <% end %>
 ```
 
-属性（トリガー側）:
+主なオプションです。
 
-- `data-modal-target`: 開くモーダルのセレクタ（例: `#settingsModal`）
-- `data-turbo-frame`: 読み込む先のTurbo Frame ID（例: `modal-settings-frame`）
-- `href`: 読み込むURL（Turbo Frameへ流し込むURL）
+- `dialog: { size: :sm|:lg|:xl|:fullscreen, centered: true, scrollable: true }`
+- `form:` `form_with` に渡すHash。指定時はブロックにフォームビルダーが渡されます。
+- `data:` モーダル要素に付与するdata属性（`controller: "modal"` は自動付与されます）。
 
-`modal.body`で定義した内容は自動的に`<div class="modal-body">`でラップされます。Turbo Frameを設置する場合はブロック内にそのまま記述してください。
+### render_offcanvas
 
-注意:
-
-- Bootstrapの`data-bs-toggle`とは併用しません。内部で`Modal.show()`とFrame読み込みを順序制御します。
-- モーダルを閉じたとき、内包の`turbo-frame`の`src`はクリアされ、次回は再読み込みされます。
-
-## 使い方（Offcanvas）
-
-オフキャンバスの器を置く:
+Bootstrap 5.3のオフキャンバスをDSLで構築します。タイトルは第1引数またはキーワード引数で指定できます。
 
 ```erb
 <%= render_offcanvas id: "previewOffcanvas", title: "プレビュー", placement: :end do %>
@@ -77,7 +107,7 @@ gem "bootstrap5-rails-extensions", path: "vendor/engines/bootstrap5_rails_extens
 <% end %>
 ```
 
-トリガー（クリックで開いてTurbo Frameに読み込む）:
+トリガー例:
 
 ```erb
 <%= link_to preview_path,
@@ -85,41 +115,78 @@ gem "bootstrap5-rails-extensions", path: "vendor/engines/bootstrap5_rails_extens
       data: { offcanvas_target: "#previewOffcanvas", turbo_frame: "offcanvas-form-template-preview" } do %>
   プレビュー
 <% end %>
-
-属性（トリガー側）:
-
-- `data-offcanvas-target`: 開くOffcanvasのセレクタ（例: `#previewOffcanvas`）
-- `data-turbo-frame`: 読み込む先のTurbo Frame ID（例: `offcanvas-form-template-preview`）
-- `href`: 読み込むURL（Turbo Frameへ流し込むURL）
-
-Offcanvas本体の`offcanvas-body`直下にも、必要に応じて手動で`<turbo-frame>`を配置してください。
 ```
 
-## オプション
+- `placement:` は `:start|:end|:top|:bottom` を受け付けます（既定は`:end`）。
+- `footer:` に文字列またはブロックを渡すと、フッター領域を描画します。
+- `data:` で追加のdata属性を渡せます（`controller: "offcanvas"` を自動付与します）。
 
-- `dialog: { size: :sm|:lg|:xl|:fullscreen, centered: true, scrollable: true }`
-- `form:` `form_with`に渡すHash。指定時は`modal.body`/`modal.footer`ブロックにフォームビルダーが渡される。
-- `data:` 追加のdata属性（`controller: "modal"` は自動付与）
+### render_card
 
-## CSSユーティリティ
+カードを簡潔に定義できるDSLです。ヘッダー、本文、フッターを1度ずつ定義できます。
 
-- `dropdown-caret-none`: Bootstrapのドロップダウンの山形（caret）を非表示にするユーティリティ
-  - 適用例:
+```erb
+<%= render_card class: "mb-4" do |card| %>
+  <% card.header class: "d-flex align-items-center" do %>
+    設定
+  <% end %>
+  <% card.body class: "p-4" do %>
+    本文...
+  <% end %>
+  <% card.footer class: "text-end" do %>
+    <%= link_to "閉じる", "#", class: "btn btn-outline-secondary" %>
+  <% end %>
+<% end %>
+```
 
-    ```erb
-    <!-- トグルに直接適用 -->
-    <button class="btn btn-sm btn-outline-secondary dropdown-toggle dropdown-caret-none" data-bs-toggle="dropdown">Actions</button>
+`data:` オプションで親要素にdata属性を追加できます。
 
-    <!-- 親要素に適用 -->
-    <div class="dropdown dropdown-caret-none">
-      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">Actions</button>
-    </div>
-    ```
+### render_table
 
-  - normal/dropup/dropend（`::after`）とdropstart（`::before`）に対応
-  - 取り込み例（例: `application.bootstrap.scss`）:
+`table-responsive` ラッパー付きでBootstrapのテーブルを出力します。
 
-    ```scss
-    @import "bootstrap/scss/bootstrap";
-    @import "bootstrap5_rails_extensions/utilities"; // .dropdown-caret-none を提供
-    ```
+```erb
+<%= render_table class: "table-striped" do |table| %>
+  <% table.thead class: "table-light" do %>
+    <tr><th>名前</th><th>状態</th></tr>
+  <% end %>
+  <% table.tbody do %>
+    <% @users.each do |user| %>
+      <tr>
+        <td><%= user.name %></td>
+        <td><%= user.status %></td>
+      </tr>
+    <% end %>
+  <% end %>
+<% end %>
+```
+
+`wrapper_class` や `wrapper_html` を渡すことでラッパー要素のカスタマイズも可能です。
+
+### render_toast
+
+トーストコンテナを描画し、フラッシュメッセージを初期表示できます。
+
+```erb
+<%= render_toast id: "toast-root", position: "top-0 end-0", flash_messages: flash %>
+```
+
+`position:` にはBootstrapのユーティリティクラスをそのまま渡してください。
+
+## Turbo Streams拡張
+
+`Turbo::Streams::TagBuilder` を拡張し、`turbo_stream.toast` を利用できるようにしています。トーストコンテナ（既定ID: `toast-root`）にメッセージを積み上げます。
+
+```ruby
+# コントローラまたはビュー
+render turbo_stream: turbo_stream.toast(:notice, "保存しました")
+
+# 追加オプション
+render turbo_stream: turbo_stream.toast(:alert, @user, target: "custom-toast", autohide: false, delay: 8000)
+```
+
+`message_or_record` にActiveModelを渡すと、エラー内容をリスト表示します。
+
+---
+
+ご不明点があればIssueやPull Requestでお気軽にお知らせください。
