@@ -1,0 +1,15 @@
+<%# Engine shared partial - expects locals: id:, title:, placement_class:, body:, footer:, data: %>
+<div class="offcanvas <%= placement_class %>" tabindex="-1" id="<%= id %>" aria-labelledby="<%= id %>Label" data-controller="<%= data[:controller] %>"<% (data || {}).except(:controller).each do |k, v| %> data-<%= k.to_s.dasherize %>="<%= v %>"<% end %>>
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="<%= id %>Label"><%= title %></h5>
+    <button type="button" class="btn-close" aria-label="閉じる" data-action="click->offcanvas#hide"></button>
+  </div>
+  <div class="offcanvas-body">
+    <%= body %>
+  </div>
+  <% if footer.present? %>
+    <div class="offcanvas-footer border-top p-3">
+      <%= footer %>
+    </div>
+  <% end %>
+</div>
