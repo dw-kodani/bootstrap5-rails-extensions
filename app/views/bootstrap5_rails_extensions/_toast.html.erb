@@ -1,0 +1,15 @@
+<%# 単一トースト要素。ローカル: msg = { text:, color: }
+  オプション: autohide(Boolean), delay(Number)
+%>
+<div class="toast align-items-center text-bg-<%= msg[:color] %> border-0"
+     role="status" aria-live="polite" aria-atomic="true"
+     data-controller="toast"
+     data-toast-autohide-value="<%= local_assigns.key?(:autohide) ? local_assigns[:autohide] : true %>"
+     data-toast-delay-value="<%= local_assigns.key?(:delay) ? local_assigns[:delay] : 4000 %>">
+  <div class="d-flex">
+    <div class="toast-body">
+      <%= msg[:text] %>
+    </div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+  </div>
+</div>
