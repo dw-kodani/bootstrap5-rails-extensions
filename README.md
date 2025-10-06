@@ -1,6 +1,6 @@
 # Bootstrap5 Rails Extensions（Rails Engine）
 
-RailsアプリケーションでBootstrap 5をTurbo/Stimulusと併用しやすくするための拡張を提供します。モーダルやオフキャンバス、カード、テーブル、トースト向けのDSLヘルパーと、対応するStimulusコントローラを同梱しています。
+RailsアプリケーションでBootstrap 5をTurbo/Stimulusと併用しやすくするための拡張を提供します。モーダルやオフキャンバス、カード、テーブル、トースト向けのDSLヘルパーと、対応するStimulusコントローラを別途配布するnpmパッケージと連携して利用します。
 
 ## インストール
 
@@ -16,11 +16,12 @@ gem "bootstrap5-rails-extensions"
 
 ### Stimulusコントローラの登録
 
-Importmapをご利用の場合は、エンジンが提供するコントローラ群をpinしてください。
+Stimulusコントローラは npm パッケージ `bootstrap5-rails-extensions-js` から提供します。あらかじめインストールしてください。
 
-```ruby
-# config/importmap.rb
-pin_all_from "bootstrap5_rails_extensions", under: "bootstrap5_rails_extensions"
+```bash
+npm install bootstrap5-rails-extensions-js
+# または
+yarn add bootstrap5-rails-extensions-js
 ```
 
 Stimulusアプリケーションへの登録例です。
@@ -28,14 +29,20 @@ Stimulusアプリケーションへの登録例です。
 ```javascript
 // app/javascript/controllers/index.js
 import { application } from "./application"
-import { registerBootstrap5Controllers } from "bootstrap5_rails_extensions"
+import {
+  ModalController,
+  OffcanvasController,
+  ToastController,
+} from "bootstrap5-rails-extensions-js"
 
-registerBootstrap5Controllers(application)
+application.register("modal", ModalController)
+application.register("offcanvas", OffcanvasController)
+application.register("toast", ToastController)
 ```
 
-オプションで`registerBootstrap5Controllers`の第2引数に`{ modal: CustomModalController }`のようなハッシュを渡すと、任意のコントローラーで上書きを行えます。ESBuildやViteなどのバンドラをご利用の場合も同様に読み込んでください。
+必要なコントローラーのみを選択的にインポートし、任意の識別子で`application.register`を呼び出すことも可能です。
 
-個別に登録したい場合は、従来どおり各コントローラーをインポートした上で`application.register`を呼び出してください。
+Importmapをご利用の場合は、`./bin/importmap pin bootstrap5-rails-extensions-js` を実行した上で同様に読み込んでください。
 
 ### トースト用コンテナの設置
 
